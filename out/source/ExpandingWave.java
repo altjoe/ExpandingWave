@@ -16,6 +16,8 @@ public class ExpandingWave extends PApplet {
 
 float speeddiv = 5;
 ArrayList<CircleWave> waves;
+Recording record;
+
 public void setup() {
     
     background(255);
@@ -24,6 +26,9 @@ public void setup() {
     CircleWave wave = new CircleWave(width/2, height/2);
     waves.add(wave);
     // wave.display();
+    record = new Recording();
+    record.start();
+    
 }
 int count = 5;
 int counter = 0;
@@ -41,14 +46,14 @@ public void draw() {
         wave.move();
         wave.display();
     }
-    fill(0);
-    ellipse(width/2, height/2, 20, 20);
-    if (counter > count){
+
+    if (counter > count && frameCount < 1150 - 400){
         CircleWave wave = new CircleWave(width/2, height/2);
         waves.add(wave);
         counter = 0;
     }
     counter += 1;
+    record.control();
 }
 
 class CircleWave {
@@ -87,7 +92,8 @@ class CircleWave {
     }
 
     public void display(){
-        fill(255);
+        // fill(255);
+        noFill();
         beginShape();
         for (PVector pt : currpt){
             curveVertex(pt.x, pt.y);
@@ -128,14 +134,56 @@ class CircleWave {
             } else if (dist <= prevcurr.mag() + 1 && dist >= prevcurr.mag() - 1){
                 currpt.set(i, loc);
                 stopped = true;
+                if (firsttime){
+                    println(frameCount);
+                    firsttime = false;
+                }
+                
             } else if (!stopped) {
                 currpt.set(i, curr);
             }
         }
     }
 }
+boolean firsttime = true;
 
 float error = 1;
+
+class Recording {
+    boolean recording = false;
+    boolean stopped = false;
+    int start_frame;
+    int stop_frame;
+    int frame_rate = 30;
+    int recording_time = 40;
+
+    public Recording() {
+        
+    }
+
+    public void start(){
+        if (recording == false && stopped == false) {
+                recording = true;
+                start_frame = frameCount;
+                stop_frame = start_frame + (frame_rate * recording_time);
+        }
+    }
+
+    public void control(){
+        if (recording) {
+            saveFrame("output/img-####.png");
+            if (stop_frame < frameCount) {
+                stopped = true;
+                recording = false;
+            }
+            print(stop_frame, frameCount, '\n');
+            if (stopped) {
+                println("Finished.");
+                System.exit(0);
+            }
+        }
+    }
+}
   public void settings() {  size(1080, 1080); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "ExpandingWave" };
